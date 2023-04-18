@@ -28,6 +28,13 @@ export const {
         purple500: '#9932CC',
         purple700: '#80007f'
 
+      },
+
+      fontSizes: {
+        md: '1.125rem',
+        lg: '1.25rem',
+        xl: '1.5rem',
+        '2xl': '2rem'
       }
     }
   })
