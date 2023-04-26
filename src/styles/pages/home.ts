@@ -24,6 +24,8 @@ export const Product = styled('a', {
   // vai fazer a imagem caber no container sem distorcer
   img: {
     objectFit: 'cover',
+    width: 'auto',
+    height: 'auto',
   },
 
   footer: {

@@ -1,15 +1,23 @@
 import Image from "next/image"
 import { useKeenSlider } from 'keen-slider/react'
+import { stripe } from "../lib/stripe"
+import { GetStaticProps } from "next"
 
 import { HomeContainer, Product } from "../styles/pages/home"
 
-import eu from '../assets/eu.jpg'
-import pizza from '../assets/pizza.jpg'
-import post from '../assets/post.png'
-
 import 'keen-slider/keen-slider.min.css'
+import Stripe from "stripe"
 
-export default function Home() {
+interface HomeProps {
+  products: {
+    id: string,
+    name: string,
+    imageUrl: string,
+    price: number,
+  }[]
+}
+
+export default function Home({ products }: HomeProps) {
 
   const [sliderRef] = useKeenSlider({
     slides: {
@@ -20,54 +28,52 @@ export default function Home() {
 
   return (
     <HomeContainer ref={sliderRef} className="keen-slider">
-      <Product className="keen-slider__slide">
-        <Image src={eu} width={520} height={480} alt="" />
+      {products.map(product => {
+        return (
+          <Product key={product.id} className="keen-slider__slide">
+            <Image src={product.imageUrl} width={520} height={480} alt="" priority />
 
-        <footer>
-          <strong>
-            Exemplo 1
-          </strong>
-          <span>
-            R$ 1997,00
-          </span>
-        </footer>
-      </Product>
-      <Product className="keen-slider__slide">
-        <Image src={pizza} width={520} height={480} alt="" />
-
-        <footer>
-          <strong>
-            Exemplo 2
-          </strong>
-          <span>
-            R$ 997,00
-          </span>
-        </footer>
-      </Product>
-      <Product className="keen-slider__slide">
-        <Image src={post} width={520} height={480} alt="" />
-
-        <footer>
-          <strong>
-            Exemplo 1
-          </strong>
-          <span>
-            R$ 1997,00
-          </span>
-        </footer>
-      </Product>
-      <Product className="keen-slider__slide">
-        <Image src={post} width={520} height={480} alt="" />
-
-        <footer>
-          <strong>
-            Exemplo 1
-          </strong>
-          <span>
-            R$ 1997,00
-          </span>
-        </footer>
-      </Product>
+            <footer>
+              <strong>
+                {product.name}
+              </strong>
+              <span>
+                {product.price}
+              </span>
+            </footer>
+          </Product>
+        )
+      })}
     </HomeContainer>
   )
+}
+
+
+// fazendo isso para que os meus dados carreguem do lado do servidor e não do cliente
+// só vai ser usado para exibir informações que necessariamente precisam ser exibidas assim que a tela iniciar
+export const getStaticProps: GetStaticProps = async () => {
+
+  const response = await stripe.products.list({
+    expand: ['data.default_price']
+  })
+
+  const products = response.data.map(product => {
+    const price = product.default_price as Stripe.Price
+
+    return {
+      id: product.id,
+      name: product.name,
+      imageUrl: product.images[0],
+      price: price.unit_amount / 100,
+
+    }
+  })
+
+  return {
+    props: {
+      products
+    },
+    revalidate: 60 * 60 * 2 // 2 hours
+  }
+
 }
